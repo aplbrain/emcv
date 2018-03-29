@@ -1,0 +1,36 @@
+FROM ermaker/keras
+
+RUN apt-get clean
+RUN apt-get update
+RUN apt-get -y upgrade
+
+RUN apt-get -y install build-essential
+
+RUN apt-get -y install \
+  libx11-dev \
+  libblosc-dev \
+  libblas-dev \
+  liblapack-dev
+
+# Setup python packages
+RUN pip install --upgrade pip
+RUN pip install Theano
+RUN pip install numpy
+RUN pip install awscli
+RUN pip install boto3
+
+# Install intern
+RUN pip install intern
+
+# Create workspace
+# TODO: Re-org this to use git clone and S3
+WORKDIR /src
+COPY ./*.py /src/
+COPY ./weights/*.hdf5 /src/weights/
+#COPY ./*.json /src/
+
+ENV KERAS_BACKEND=theano
+ENV PATH=/src:$PATH
+
+RUN mkdir ~/.aws
+#ENTRYPOINT ["python", "deploy_em.py"]

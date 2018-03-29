@@ -1,0 +1,39 @@
+FROM kaixhin/cuda-theano:8.0
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+  libhdf5-dev \
+  python-h5py \
+  python-yaml \
+  vim
+
+RUN pip install --upgrade pip
+# Upgrade six
+RUN pip install --upgrade six
+
+# Clone Keras repo and move into it
+#RUN cd /root && git clone https://github.com/fchollet/keras.git && cd keras && \
+#  # Install
+#  python setup.py install
+RUN pip install keras==1.2.2
+
+# Install intern
+RUN pip install -U intern
+RUN pip install -U awscli
+RUN pip install -U boto3
+
+# Create workspace
+# TODO: Re-org this to use git clone and S3
+WORKDIR /src
+COPY ./weights/ /src/weights/
+#COPY ./aws-batch/setup/startup.sh /src/
+#COPY ./*.json /src/
+COPY ./*.py /src/
+
+ENV KERAS_BACKEND=theano
+ENV PATH=/src:$PATH
+
+ENV THEANO_FLAGS='device=gpu,lib.cnmem=1'
+ENV AWS_DEFAULT_REGION='us-east-2'
+
+CMD ["python", "deploy_unet_sqs.py"]
